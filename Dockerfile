@@ -39,11 +39,11 @@ RUN grep ClientAliveInterval /etc/ssh/sshd_config >/dev/null 2>&1 || echo "Clien
 
 VOLUME ["${PXC_VOLUME}"]
 
-EXPORT ${SSH_PORT}
-EXPORT ${MYSQLCHK_PORT}
-EXPORT ${PXC_GROUP_PORT}
-EXPORT ${PXC_SST_PORT}
-EXPORT ${PXC_IST_PORT}
+EXPOSE ${SSH_PORT}
+EXPOSE ${MYSQLCHK_PORT}
+EXPOSE ${PXC_GROUP_PORT}
+EXPOSE ${PXC_SST_PORT}
+EXPOSE ${PXC_IST_PORT}
 
 RUN mkdir -p /usr/local/bin
 RUN echo "mysqlchk ${MYSQLCHK_PORT}/tcp #mysqlchk" >> /etc/services
