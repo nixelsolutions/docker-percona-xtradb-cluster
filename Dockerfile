@@ -24,6 +24,7 @@ ENV PXC_BOOTSTRAP_FLAG ${PXC_VOLUME}/pxc.bootstrapped
 ENV SSH_OPTS -p ${SSH_PORT} -o ConnectTimeout=20 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 ENV SSH_USER root
 ENV SSH_PORT 2222
+ENV MYSQL_PORT 3306
 ENV MYSQLCHK_PORT 9200
 ENV PXC_GROUP_PORT 4567
 ENV PXC_SST_PORT 4444
@@ -40,6 +41,7 @@ RUN grep ClientAliveInterval /etc/ssh/sshd_config >/dev/null 2>&1 || echo "Clien
 VOLUME ["${PXC_VOLUME}"]
 
 EXPOSE ${SSH_PORT}
+EXPOSE ${MYSQL_PORT}
 EXPOSE ${MYSQLCHK_PORT}
 EXPOSE ${PXC_GROUP_PORT}
 EXPOSE ${PXC_SST_PORT}
