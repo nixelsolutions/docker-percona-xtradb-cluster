@@ -16,7 +16,6 @@ for node in `echo "${PXC_NODES}" | sed "s/,/ /g"`; do
    echo "=> Notifying node $node about myself ..."
    sshpass -p ${PXC_ROOT_PASSWORD} ssh ${SSH_OPTS} ${SSH_USER}@${node} "change_pxc_nodes.sh \"${PXC_NODES}\""
 done
-touch ${PXC_CONF_FLAG}
 
 echo "=> Starting PXC Cluster"
 /usr/bin/supervisord

@@ -18,8 +18,7 @@ echo "CREATE USER 'sstuser'@'%' IDENTIFIED BY '${PXC_SST_PASSWORD}';" >> /tmp/in
 echo "GRANT RELOAD, LOCK TABLES, REPLICATION CLIENT ON *.* TO 'sstuser'@'%';" >> /tmp/init.sql
 echo "GRANT PROCESS ON *.* TO 'clustercheckuser'@'localhost' IDENTIFIED BY 'clustercheckpassword!';" >> /tmp/init.sql
 echo "FLUSH PRIVILEGES;" >> /tmp/init.sql
-touch ${PXC_CONF_FLAG}
-touch ${PXC_BOOTSTRAP_FLAG}
+echo "CREATE DATABASE `basename ${PXC_BOOTSTRAP_FLAG}`;" >> /tmp/init.sql
 
 # Import an init SQL
 if [ "${PXC_INIT_SQL}" != "**ChangeMe**" -a ! -z "${PXC_INIT_SQL}" ]; then

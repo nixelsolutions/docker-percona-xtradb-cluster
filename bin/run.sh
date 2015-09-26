@@ -41,7 +41,7 @@ echo "==========================================="
 
 # If this container is not configured, just configure it
 BOOTSTRAPED=false
-if [ ! -e ${PXC_CONF_FLAG} ]; then
+if [ ! -e ${PXC_BOOTSTRAP_FLAG} ]; then
    # Ask other containers if they're already configured
    # If so, I'm joining the cluster
    # If not, I'm bootstraping only if I'm first node in PXC_NODES - needed for cluster initialization
