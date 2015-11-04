@@ -12,6 +12,8 @@ pxc:
   - 4567:4567/tcp
   - 4444:4444/tcp
   - 4568:4568/tcp
+  volumes:
+  - /var/lib/mysql:/var/lib/mysql
   tty: true
   image: nixel/docker-percona-xtradb-cluster:latest
   privileged: true
