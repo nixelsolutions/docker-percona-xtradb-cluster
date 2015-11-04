@@ -2,7 +2,7 @@ pxc:
   restart: always
   environment:
     PXC_SST_PASSWORD: "**ChangeMe**"
-    PXC_ROOT_PASSWOR: "**ChangeMe**"
+    PXC_ROOT_PASSWORD: "**ChangeMe**"
     PXC_NODES: "**ChangeMe**"
     MY_IP: "**ChangeMe**"
   ports:
