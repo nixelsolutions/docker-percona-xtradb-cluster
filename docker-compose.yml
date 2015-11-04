@@ -1,0 +1,18 @@
+pxc:
+  restart: always
+  environment:
+    PXC_SST_PASSWORD: "**ChangeMe**"
+    PXC_ROOT_PASSWOR: "**ChangeMe**"
+    PXC_NODES: "**ChangeMe**"
+    MY_IP: "**ChangeMe**"
+  ports:
+  - 2222:2222/tcp
+  - 3306:3306/tcp
+  - 9200:9200/tcp
+  - 4567:4567/tcp
+  - 4444:4444/tcp
+  - 4568:4568/tcp
+  tty: true
+  image: nixel/docker-percona-xtradb-cluster:latest
+  privileged: true
+  stdin_open: true
