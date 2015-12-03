@@ -1,20 +1,16 @@
 pxc:
   restart: always
+  labels:
+    io.rancher.scheduler.global: 'true'
+    io.rancher.scheduler.affinity:host_label: target.service=database
   environment:
     PXC_SST_PASSWORD: "**ChangeMe**"
     PXC_ROOT_PASSWORD: "**ChangeMe**"
     PXC_NODES: "**ChangeMe**"
     MY_IP: "**ChangeMe**"
-  ports:
-  - 2222:2222/tcp
-  - 3306:3306/tcp
-  - 9200:9200/tcp
-  - 4567:4567/tcp
-  - 4444:4444/tcp
-  - 4568:4568/tcp
   volumes:
-  - /var/lib/mysql:/var/lib/mysql
+  - /data/mysql:/var/lib/mysql
+  image: nixel/rancher-percona-xtradb-cluster:v1.1.3
   tty: true
-  image: nixel/docker-percona-xtradb-cluster:latest
   privileged: true
   stdin_open: true
