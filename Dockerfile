@@ -18,6 +18,7 @@ ENV PXC_NODES **ChangeMe**
 ENV MY_IP **ChangeMe**
 
 ENV PXC_VOLUME /var/lib/mysql
+ENV PXC_LOGS_PATH /var/log/mysql
 ENV PXC_CONF /etc/mysql/conf.d/pxc.cnf
 ENV PXC_BOOTSTRAP_FLAG ${PXC_VOLUME}/pxcbootstrapped
 ENV SSH_OPTS -p ${SSH_PORT} -o ConnectTimeout=20 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
@@ -37,7 +38,7 @@ RUN perl -p -i -e "s/#?PasswordAuthentication .*/PasswordAuthentication yes/g" /
 RUN perl -p -i -e "s/#?PermitRootLogin .*/PermitRootLogin yes/g" /etc/ssh/sshd_config
 RUN grep ClientAliveInterval /etc/ssh/sshd_config >/dev/null 2>&1 || echo "ClientAliveInterval 60" >> /etc/ssh/sshd_config
 
-VOLUME ["${PXC_VOLUME}"]
+VOLUME ["${PXC_VOLUME}", "{PXC_LOGS_PATH}"]
 
 EXPOSE ${SSH_PORT}
 EXPOSE ${MYSQL_PORT}
