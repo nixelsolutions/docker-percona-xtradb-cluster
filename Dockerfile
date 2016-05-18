@@ -38,7 +38,7 @@ RUN perl -p -i -e "s/#?PasswordAuthentication .*/PasswordAuthentication yes/g" /
 RUN perl -p -i -e "s/#?PermitRootLogin .*/PermitRootLogin yes/g" /etc/ssh/sshd_config
 RUN grep ClientAliveInterval /etc/ssh/sshd_config >/dev/null 2>&1 || echo "ClientAliveInterval 60" >> /etc/ssh/sshd_config
 
-VOLUME ["${PXC_VOLUME}", "{PXC_LOGS_PATH}"]
+VOLUME ["${PXC_VOLUME}", "${PXC_LOGS_PATH}"]
 
 EXPOSE ${SSH_PORT}
 EXPOSE ${MYSQL_PORT}
