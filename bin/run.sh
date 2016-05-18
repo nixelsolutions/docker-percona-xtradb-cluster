@@ -24,6 +24,9 @@ if [ "${MY_IP}" == "**ChangeMe**" -o -z "${MY_IP}" ]; then
    exit 1
 fi
 
+# Logs
+chown -R mysql ${PXC_LOGS_PATH}
+
 # Configure the cluster (replace required parameters)
 sleep 5
 echo "=> Configuring PXC cluster"
