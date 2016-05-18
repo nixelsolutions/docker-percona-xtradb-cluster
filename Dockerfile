@@ -51,8 +51,6 @@ RUN mkdir -p /usr/local/bin
 RUN echo "mysqlchk ${MYSQLCHK_PORT}/tcp #mysqlchk" >> /etc/services
 ADD ./bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*.sh
-ADD ./etc/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-ADD ./etc/supervisord_bootstrap.conf /etc/supervisor/conf.d/supervisord_bootstrap.conf
-ADD ./etc/mysql/conf.d/pxc.cnf /etc/mysql/conf.d/pxc.cnf
+ADD ./etc /etc
 
 CMD ["/usr/local/bin/run.sh"]
