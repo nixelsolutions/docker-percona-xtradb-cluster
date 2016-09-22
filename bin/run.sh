@@ -27,6 +27,14 @@ fi
 # Logs
 chown -R mysql ${PXC_LOGS_PATH}
 
+# Start postfix
+echo "=> Starting postfix ..."
+service postfix start
+
+# Customizing settings
+echo "=> Customizing settings ..."
+perl -p -i -e "s/%PXC_ROOT_PASSWORD%/${PXC_ROOT_PASSWORD}/g" /usr/local/bin/check-percona-locks.sh
+
 # Configure the cluster (replace required parameters)
 sleep 5
 echo "=> Configuring PXC cluster"
