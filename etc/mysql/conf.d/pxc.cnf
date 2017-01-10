@@ -22,11 +22,13 @@ wsrep_sst_method=xtrabackup-v2
 
 # Issue #5
 wsrep_sst_receive_address=MY_IP
-progress=1
-time=1
 
 # Cluster name
 wsrep_cluster_name=pxc_rancher
 
 # Authentication for SST method
 wsrep_sst_auth="sstuser:PXC_SST_PASSWORD"
+
+[sst]
+progress=1
+time=1
