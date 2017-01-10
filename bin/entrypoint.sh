@@ -6,6 +6,9 @@ set -e
 
 # Entrypoint optional flags
 export MYSQL_OPTS="$@"
+# Issue #5
+MY_LOCAL_IP=`ipcalc $(ip addr | grep eth0 | grep inet | awk '{print $2}') | grep Address | awk '{print $2}'`
+export MYSQL_OPTS="${MYSQL_OPTS} --wsrep_provider_options=\"ist.recv_bind=${MY_LOCAL_IP}\""
 
 if [ "${PXC_SST_PASSWORD}" == "**ChangeMe**" -o -z "${PXC_SST_PASSWORD}" ]; then
    echo "*** ERROR: you need to define PXC_SST_PASSWORD environment variable - Exiting ..."

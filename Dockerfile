@@ -9,7 +9,7 @@ RUN echo "deb-src http://repo.percona.com/apt trusty main" >> /etc/apt/sources.l
 
 RUN apt-key adv --keyserver keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A
 RUN apt-get update && \
-    apt-get -y --force-yes install percona-xtradb-cluster-56 pwgen supervisor openssh-server sshpass xinetd wget
+    apt-get -y --force-yes install percona-xtradb-cluster-56 pwgen supervisor openssh-server sshpass xinetd wget ipcalc
 
 # Install postfix
 RUN apt-get update -q -q &&  echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set-selections &&  echo postfix postfix/mynetworks string "127.0.0.0/8" | debconf-set-selections &&  echo postfix postfix/mailname string thecore.io | debconf-set-selections &&  apt-get --yes --force-yes install mailutils postfix &&  postconf -e mydestination="localhost.localdomain, localhost" &&  postconf -e smtpd_banner='$myhostname ESMTP $mail_name' &&  postconf -# myhostname &&  postconf -e inet_protocols=ipv4
