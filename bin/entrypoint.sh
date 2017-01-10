@@ -4,6 +4,9 @@ set -e
 
 [ "$DEBUG" == "1" ] && set -x && set +e
 
+# Entrypoint optional flags
+export MYSQL_OPTS="$@"
+
 if [ "${PXC_SST_PASSWORD}" == "**ChangeMe**" -o -z "${PXC_SST_PASSWORD}" ]; then
    echo "*** ERROR: you need to define PXC_SST_PASSWORD environment variable - Exiting ..."
    exit 1
@@ -48,7 +51,7 @@ chown -R mysql:mysql ${PXC_VOLUME}
 echo "==========================================="
 echo "When you need to use this database cluster in an application"
 echo "remember that your MySQL root password is ${PXC_ROOT_PASSWORD}"
-echo "===========================================" 
+echo "==========================================="
 
 # If this container is not configured, just configure it
 BOOTSTRAPED=false
@@ -61,13 +64,13 @@ if [ ! -e ${PXC_BOOTSTRAP_FLAG} ]; then
       if [ "${MY_IP}" == "${node}" ]; then
          continue
       fi
-      # Check if node is already initializated - that means the cluster has already been bootstraped 
+      # Check if node is already initializated - that means the cluster has already been bootstraped
       if sshpass -p ${PXC_ROOT_PASSWORD} ssh ${SSH_OPTS} ${SSH_USER}@${node} "[ -e ${PXC_BOOTSTRAP_FLAG} ]" >/dev/null 2>&1; then
          BOOTSTRAPED=true
          break
       fi
    done
-   
+
    if ${BOOTSTRAPED}; then
       echo "=> Seems like cluster has already been bootstraped, so I'm joining it ..."
       join-cluster.sh || exit 1
@@ -84,5 +87,5 @@ if [ ! -e ${PXC_BOOTSTRAP_FLAG} ]; then
 else
    # If this container is already configured, just start it
    echo "=> I was already part of the cluster, starting PXC"
-   /usr/bin/supervisord
+   exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf --nodaemon
 fi

@@ -23,12 +23,13 @@ echo "CREATE DATABASE `basename ${PXC_BOOTSTRAP_FLAG}`;" >> /tmp/init.sql
 # Import an init SQL
 if [ "${PXC_INIT_SQL}" != "**ChangeMe**" -a ! -z "${PXC_INIT_SQL}" ]; then
    # Save the SQL temporary
-   wget -O /tmp/init_exteranl.sql "${PXC_INIT_SQL}" 
+   wget -O /tmp/init_exteranl.sql "${PXC_INIT_SQL}"
    if [ $? -eq 0 ]; then
       echo "=> I'm importing this SQL file when bootstraping: ${PXC_INIT_SQL}"
       cat /tmp/init_exteranl.sql >> /tmp/init.sql
    fi
-fi   
+fi
 
 echo "=> Starting PXC Cluster"
-/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord_bootstrap.conf
+export MYSQL_OPTS="${MYSQL_OPTS} --init-file=/tmp/init.sql"
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

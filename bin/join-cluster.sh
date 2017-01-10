@@ -18,4 +18,4 @@ for node in `echo "${PXC_NODES}" | sed "s/,/ /g"`; do
 done
 
 echo "=> Starting PXC Cluster"
-/usr/bin/supervisord
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
