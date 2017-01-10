@@ -31,5 +31,5 @@ if [ "${PXC_INIT_SQL}" != "**ChangeMe**" -a ! -z "${PXC_INIT_SQL}" ]; then
 fi
 
 echo "=> Starting PXC Cluster"
-export MYSQL_OPTS="${MYSQL_OPTS} --init-file=/tmp/init.sql"
+export MYSQL_OPTS="${MYSQL_OPTS} --wsrep-new-cluster --init-file=/tmp/init.sql"
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
