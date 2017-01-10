@@ -20,6 +20,9 @@ wsrep_node_address=MY_IP
 # SST method
 wsrep_sst_method=xtrabackup-v2
 
+# Issue #5
+wsrep_sst_receive_address=MY_IP
+
 # Cluster name
 wsrep_cluster_name=pxc_rancher
 
