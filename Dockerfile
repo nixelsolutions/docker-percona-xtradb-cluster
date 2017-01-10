@@ -21,6 +21,7 @@ ENV PXC_NODES **ChangeMe**
 ENV MY_IP **ChangeMe**
 
 ENV PXC_VOLUME /var/lib/mysql
+ENV PXC_TMP /tmp
 ENV PXC_LOGS_PATH /var/log/mysql
 ENV PXC_CONF /etc/mysql/conf.d/pxc.cnf
 ENV PXC_BOOTSTRAP_FLAG ${PXC_VOLUME}/pxcbootstrapped

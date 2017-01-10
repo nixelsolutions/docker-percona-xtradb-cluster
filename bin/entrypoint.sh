@@ -47,6 +47,7 @@ echo "root:${PXC_ROOT_PASSWORD}" | chpasswd
 perl -p -i -e "s/PXC_SST_PASSWORD/${PXC_SST_PASSWORD}/g" ${PXC_CONF}
 perl -p -i -e "s/MY_IP/${MY_IP}/g" ${PXC_CONF}
 chown -R mysql:mysql ${PXC_VOLUME}
+chown -R mysql:mysql ${PXC_TMP}
 
 echo "==========================================="
 echo "When you need to use this database cluster in an application"
