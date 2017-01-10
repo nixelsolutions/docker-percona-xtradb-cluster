@@ -7,8 +7,7 @@ set -e
 # Entrypoint optional flags
 export MYSQL_OPTS="$@"
 # Issue #5
-MY_LOCAL_IP=`ipcalc $(ip addr | grep eth0 | grep inet | awk '{print $2}') | grep Address | awk '{print $2}'`
-export MYSQL_OPTS="${MYSQL_OPTS} --wsrep-provider-options="ist.recv_bind=${MY_LOCAL_IP}""
+export MY_LOCAL_IP=`ipcalc $(ip addr | grep eth0 | grep inet | awk '{print $2}') | grep Address | awk '{print $2}'`
 
 if [ "${PXC_SST_PASSWORD}" == "**ChangeMe**" -o -z "${PXC_SST_PASSWORD}" ]; then
    echo "*** ERROR: you need to define PXC_SST_PASSWORD environment variable - Exiting ..."
@@ -49,6 +48,7 @@ change_pxc_nodes.sh "${PXC_NODES}"
 echo "root:${PXC_ROOT_PASSWORD}" | chpasswd
 perl -p -i -e "s/PXC_SST_PASSWORD/${PXC_SST_PASSWORD}/g" ${PXC_CONF}
 perl -p -i -e "s/MY_IP/${MY_IP}/g" ${PXC_CONF}
+perl -p -i -e "s/MY_LOCAL_IP/${MY_LOCAL_IP}/g" ${PXC_CONF}
 chown -R mysql:mysql ${PXC_VOLUME}
 chown -R mysql:mysql ${PXC_TMP}
 
