@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mysql/current/bin
+
+* * * * * root /usr/local/bin/check-mysql-locks.sh | logger -t "check-mysql-locks"

@@ -1,36 +1,116 @@
-#!/bin/bash
+#!/bin/bash 
 
 set -e
 
 [ "$DEBUG" == "1" ] && set -x && set +e
 
-# Entrypoint optional flags
-export MYSQL_OPTS="$@"
-# Issue #5
-export MY_LOCAL_IP=`ipcalc $(ip addr | grep eth0 | grep inet | awk '{print $2}') | grep Address | awk '{print $2}'`
+if [ "${MYSQL_ENABLE_REPLICATION}" == "YES" -o "${MYSQL_ENABLE_REPLICATION}" == "yes" ]; then
+  if [ "${MYSQL_SERVER_ID}" == "**ChangeMe**" -o -z "${MYSQL_SERVER_ID}" ]; then
+    echo "*** ERROR: you need to define MYSQL_SERVER_ID environment variable - Exiting ..."
+    exit 1
+  fi
 
-if [ "${PXC_SST_PASSWORD}" == "**ChangeMe**" -o -z "${PXC_SST_PASSWORD}" ]; then
-   echo "*** ERROR: you need to define PXC_SST_PASSWORD environment variable - Exiting ..."
+  if [ "${MYSQL_MASTER_HOST}" == "**ChangeMe**" -o -z "${MYSQL_MASTER_HOST}" ]; then
+    echo "*** ERROR: you need to define MYSQL_MASTER_HOST environment variable - Exiting ..."
+    exit 1
+  fi
+
+  if [ "${MYSQL_MASTER_PORT}" == "**ChangeMe**" -o -z "${MYSQL_MASTER_PORT}" ]; then
+    echo "*** ERROR: you need to define MYSQL_MASTER_PORT environment variable - Exiting ..."
+    exit 1
+  fi
+
+  if [ "${MYSQL_REPL_PASSWORD}" == "**ChangeMe**" -o -z "${MYSQL_REPL_PASSWORD}" ]; then
+    echo "*** ERROR: you need to define MYSQL_REPL_PASSWORD environment variable - Exiting ..."
+    exit 1
+  fi
+fi
+
+if [ "${MYSQL_ROOT_PASSWORD}" == "**ChangeMe**" -o -z "${MYSQL_ROOT_PASSWORD}" ]; then
+   echo "*** ERROR: you need to define MYSQL_ROOT_PASSWORD environment variable - Exiting ..."
    exit 1
 fi
 
-if [ "${PXC_ROOT_PASSWORD}" == "**ChangeMe**" -o -z "${PXC_ROOT_PASSWORD}" ]; then
-   echo "*** ERROR: you need to define PXC_ROOT_PASSWORD environment variable - Exiting ..."
-   exit 1
+HOSTNAME=`hostname -s`
+
+# Delete unix socket
+if [ -e ${MYSQL_DATADIR}/mysql.sock -o -e ${MYSQL_DATADIR}/mysql.sock.lock ]; then
+  rm -f ${MYSQL_DATADIR}/mysql.sock*
 fi
 
-if [ "${PXC_NODES}" == "**ChangeMe**" -o -z "${PXC_NODES}" ]; then
-   echo "*** ERROR: you need to define PXC_NODES environment variable - Exiting ..."
-   exit 1
-fi
+# Backups
+mkdir -p ${BACKUPS_PATH}
+chown -R mysql:mysql ${BACKUPS_PATH}
 
-if [ "${MY_IP}" == "**ChangeMe**" -o -z "${MY_IP}" ]; then
-   echo "*** ERROR: you need to define MY_IP environment variable - Exiting ..."
-   exit 1
-fi
+# Tmp
+mkdir -p ${TMP_PATH}
+chown -R mysql:mysql ${TMP_PATH}
 
 # Logs
-chown -R mysql ${PXC_LOGS_PATH}
+MYSQL_LOGS_PATH=${LOGS_PATH}/${HOSTNAME}
+if [ ! -d ${MYSQL_LOGS_PATH} ]; then
+  mkdir -p ${MYSQL_LOGS_PATH}
+fi
+chown mysql:mysql ${LOGS_PATH}
+chmod 770 ${LOGS_PATH}
+chown mysql:mysql ${MYSQL_LOGS_PATH}
+chmod 770 ${MYSQL_LOGS_PATH}
+
+SUPERVISOR_LOGS_PATH=${LOGS_PATH}/supervisor/${HOSTNAME}
+if [ ! -d ${SUPERVISOR_LOGS_PATH} ]; then
+  mkdir -p ${SUPERVISOR_LOGS_PATH}
+  chown root:syslog ${SUPERVISOR_LOGS_PATH}
+  chmod 770 ${SUPERVISOR_LOGS_PATH}
+fi
+SUPERVISOR_LOGS_PATH_SCAPED=`echo ${SUPERVISOR_LOGS_PATH}/supervisord.log | sed "s/\//\\\\\\\\\//g"`
+perl -p -i -e "s/^logfile ?= ?.*/logfile=${SUPERVISOR_LOGS_PATH_SCAPED}/g" /etc/supervisor/conf.d/supervisord.conf
+
+# Configure MySQL
+mkdir -p `dirname ${MYSQL_CFG_FILE}`
+echo "[mysqld]" > ${MYSQL_CFG_FILE}
+echo "port = ${MYSQL_BIND_PORT}" >> ${MYSQL_CFG_FILE}
+echo "default_storage_engine = ${MYSQL_STORAGE_ENGINE}" >> ${MYSQL_CFG_FILE}
+echo "server_id = ${MYSQL_SERVER_ID}" >> ${MYSQL_CFG_FILE}
+echo "#replicate_same_server_id = 0" >> ${MYSQL_CFG_FILE}
+echo "auto_increment_increment = ${AUTO_INCREMENT_INCREMENT}" >> ${MYSQL_CFG_FILE}
+echo "auto_increment_offset  = ${AUTO_INCREMENT_OFFSET}" >> ${MYSQL_CFG_FILE}
+echo "log_bin = binlog" >> ${MYSQL_CFG_FILE}
+echo "binlog_format = ROW" >> ${MYSQL_CFG_FILE}
+echo "expire_logs_days = ${EXPIRE_LOGS_DAYS}" >> ${MYSQL_CFG_FILE}
+echo "max_binlog_size = ${MAX_BINLOG_SIZE}" >> ${MYSQL_CFG_FILE}
+echo "gtid_mode = ON" >> ${MYSQL_CFG_FILE}
+echo "log_slave_updates = 1" >> ${MYSQL_CFG_FILE}
+echo "enforce_gtid_consistency = 1" >> ${MYSQL_CFG_FILE}
+echo "innodb_flush_log_at_trx_commit = ${INNODB_FLUSH_LOG_AT_TRX_COMMIT}" >> ${MYSQL_CFG_FILE}
+echo "innodb_buffer_pool_instances = ${INNODB_BUFFER_POOL_INSTANCES}" >> ${MYSQL_CFG_FILE}
+echo "innodb_io_capacity = ${INNODB_IO_CAPACITY}" >> ${MYSQL_CFG_FILE}
+echo "innodb_io_capacity_max = ${INNODB_IO_CAPACITY_MAX}" >> ${MYSQL_CFG_FILE}
+echo "slave_parallel_workers = ${SLAVE_PARALLEL_WORKERS}" >> ${MYSQL_CFG_FILE}
+echo "slave_parallel_type = ${SLAVE_PARALLEL_TYPE}" >> ${MYSQL_CFG_FILE}
+
+# Configure HAPRoxy
+cp -p ${HAPROXY_CFG_FILE}.orig ${HAPROXY_CFG_FILE}
+perl -p -i -e "s/HAPROXY_BIND_PORT/${HAPROXY_BIND_PORT}/g" ${HAPROXY_CFG_FILE}
+perl -p -i -e "s/HAPROXY_STATS_PORT/${HAPROXY_STATS_PORT}/g" ${HAPROXY_CFG_FILE}
+perl -p -i -e "s/# MYSQL NODES HERE.*//g" ${HAPROXY_CFG_FILE}
+
+# Add SERVERID=1 as master!
+if [ "${MYSQL_ENABLE_REPLICATION}" == "YES" -o "${MYSQL_ENABLE_REPLICATION}" == "yes" ]; then
+  if [ ${MYSQL_SERVER_ID} -eq 1 ]; then
+    # If replication is enabled, and I'm SERVERID=1, just add me as the primary master!
+    echo "  server db1 127.0.0.1:${MYSQL_BIND_PORT} check port ${MYSQL_BIND_PORT} rise 2 fall 3 on-marked-up shutdown-backup-sessions" >> ${HAPROXY_CFG_FILE}
+    # If replication is enabled, and I'm SERVERID=1, just add MASTER_HOST as backup master!
+    echo "  server db2 ${MYSQL_MASTER_HOST}:${MYSQL_MASTER_PORT} check port ${MYSQL_MASTER_PORT} rise 2 fall 3 backup" >> ${HAPROXY_CFG_FILE}
+  else
+    # If replication is enabled, but I'm not SERVERID=1, then add MASTER_HOST as primary master!
+    echo "  server db1 ${MYSQL_MASTER_HOST}:${MYSQL_MASTER_PORT} check port ${MYSQL_MASTER_PORT} rise 2 fall 3 on-marked-up shutdown-backup-sessions" >> ${HAPROXY_CFG_FILE}
+    # And then, add me as a backup master!
+    echo "  server db2 127.0.0.1:${MYSQL_BIND_PORT} check port ${MYSQL_BIND_PORT} rise 2 fall 3 backup" >> ${HAPROXY_CFG_FILE}
+  fi
+else
+  # If replication is not enabled, I'm the only master ...
+  echo "  server db1 127.0.0.1:${MYSQL_BIND_PORT} check port ${MYSQL_BIND_PORT} rise 2 fall 3 on-marked-up shutdown-backup-sessions" >> ${HAPROXY_CFG_FILE}
+fi
 
 # Start postfix
 echo "=> Starting postfix ..."
@@ -38,58 +118,24 @@ service postfix start
 
 # Customizing settings
 echo "=> Customizing settings ..."
-perl -p -i -e "s/%PXC_ROOT_PASSWORD%/${PXC_ROOT_PASSWORD}/g" /usr/local/bin/check-percona-locks.sh
+perl -p -i -e "s/%MYSQL_ROOT_PASSWORD%/${MYSQL_ROOT_PASSWORD}/g" /usr/local/bin/check-mysql-locks.sh
 
-# Configure the cluster (replace required parameters)
-sleep 5
-echo "=> Configuring PXC cluster"
-
-change_pxc_nodes.sh "${PXC_NODES}"
-echo "root:${PXC_ROOT_PASSWORD}" | chpasswd
-perl -p -i -e "s/PXC_SST_PASSWORD/${PXC_SST_PASSWORD}/g" ${PXC_CONF}
-perl -p -i -e "s/MY_IP/${MY_IP}/g" ${PXC_CONF}
-perl -p -i -e "s/MY_LOCAL_IP/${MY_LOCAL_IP}/g" ${PXC_CONF}
-chown -R mysql:mysql ${PXC_VOLUME}
-chown -R mysql:mysql ${PXC_TMP}
-
-echo "==========================================="
-echo "When you need to use this database cluster in an application"
-echo "remember that your MySQL root password is ${PXC_ROOT_PASSWORD}"
-echo "==========================================="
-
-# If this container is not configured, just configure it
-BOOTSTRAPED=false
-if [ ! -e ${PXC_BOOTSTRAP_FLAG} ]; then
-   # Ask other containers if they're already configured
-   # If so, I'm joining the cluster
-   # If not, I'm bootstraping only if I'm first node in PXC_NODES - needed for cluster initialization
-   for node in `echo "${PXC_NODES}" | sed "s/,/ /g"`; do
-      # Skip myself
-      if [ "${MY_IP}" == "${node}" ]; then
-         continue
-      fi
-      # Check if node is already initializated - that means the cluster has already been bootstraped
-      if sshpass -p ${PXC_ROOT_PASSWORD} ssh ${SSH_OPTS} ${SSH_USER}@${node} "[ -e ${PXC_BOOTSTRAP_FLAG} ]" >/dev/null 2>&1; then
-         BOOTSTRAPED=true
-         break
-      fi
-   done
-
-   if ${BOOTSTRAPED}; then
-      echo "=> Seems like cluster has already been bootstraped, so I'm joining it ..."
-      join-cluster.sh || exit 1
-   else
-      # If I could not detect any other container bootstraped I'm bootstraping it, but only if I'm the first one in PXC_NODES
-      if [ "${MY_IP}" == `echo "${PXC_NODES}" | awk -F, '{print $1}'` ]; then
-         bootstrap-pxc.sh || exit 1
-      # Don't bootstrap the cluster, just join it - Needed for subsequent containers initialization
-      else
-         echo "=> Seems like cluster is being bootstraped by another container, so I'm joining it ..."
-         join-cluster.sh || exit 1
-      fi
-   fi
-else
-   # If this container is already configured, just start it
-   echo "=> I was already part of the cluster, starting PXC"
-   exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf --nodaemon
+if [ "${MYSQL_ENABLE_REPLICATION}" == "YES" -o "${MYSQL_ENABLE_REPLICATION}" == "yes" ]; then
+  echo "******** IMPORTANT **********"
+  echo
+  echo "=> When you start master replication, remember to change master with this statement:"
+  echo
+  echo "CHANGE MASTER TO MASTER_HOST='${MYSQL_MASTER_HOST}', MASTER_PORT=${MYSQL_MASTER_PORT}, MASTER_USER='${MYSQL_REPL_USER}', MASTER_PASSWORD='${MYSQL_REPL_PASSWORD}', MASTER_AUTO_POSITION=1;"
+  echo
+  echo "*****************************"
 fi
+
+# Initialize MySQL
+if [ ! -d ${MYSQL_DATADIR}/${MYSQL_INITIALIZE_DB_FLAG} ]; then
+  echo "=> Starting initialized MySQL daemon ..."
+  initialize.sh || exit 1
+else
+  echo "=> I was already initialized, starting MySQL daemon ..."
+fi
+/usr/bin/supervisord
+

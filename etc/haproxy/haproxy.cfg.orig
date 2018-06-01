@@ -1,0 +1,36 @@
+global
+log 127.0.0.1 local0
+log 127.0.0.1 local1 notice
+maxconn 4096
+chroot /var/lib/haproxy
+user haproxy
+group haproxy
+
+defaults
+log global
+mode http
+option tcplog
+option dontlognull
+retries 3
+option redispatch
+maxconn 4096
+timeout connect 50000
+timeout server 0
+timeout client 0
+
+frontend stats
+bind *:HAPROXY_STATS_PORT
+mode http
+default_backend stats
+
+backend stats
+mode http
+balance roundrobin
+stats uri /
+stats auth haproxy:h4pr0xy
+
+listen mysql-cluster
+  bind *:HAPROXY_BIND_PORT
+  mode tcp
+  balance roundrobin
+  # MYSQL NODES HERE

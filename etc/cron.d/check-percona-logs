@@ -1,1 +1,0 @@
-* * * * * root /usr/local/bin/check-percona-locks.sh | logger -t "check-percona-locks"

@@ -1,12 +1,18 @@
-pxc:
+mysql:
   restart: always
   environment:
-    PXC_SST_PASSWORD: "**ChangeMe**"
-    PXC_ROOT_PASSWORD: "**ChangeMe**"
-    PXC_NODES: "**ChangeMe**"
-    MY_IP: "**ChangeMe**"
+    - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+    - "MYSQL_ENABLE_REPLICATION=${MYSQL_ENABLE_REPLICATION}"
+    - "MYSQL_SERVER_ID=${MYSQL_SERVER_ID}"
+    - "MYSQL_MASTER_HOST=${MYSQL_MASTER_HOST}"
+    - "MYSQL_REPL_PASSWORD=${MYSQL_REPL_PASSWORD}"
+  ports:
+    - 3306:3306/tcp
+    - 3307:3307/tcp
+    - 1936:1936/tcp
   volumes:
-  - /data/mysql:/var/lib/mysql
-  - /var/log/mysql:/var/log/mysql
-  image: nixel/rancher-percona-xtradb-cluster:latest
-  privileged: true
+    - /data/mysql/datadir:/var/lib/mysql
+    - /data/mysql/tmp:/tmp
+    - /data/mysql/backup:/backup
+    - /var/log/mysql:/var/log/mysql
+  image: nixel/docker-percona-master:${MYSQL_VERSION}

@@ -1,0 +1,3 @@
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mysql/current/bin
+
+0 */12 * * * root mysqldump.sh -s 127.0.0.1 -o 3307 -p /backup/mysql -d all-single-file -r 15,30 | logger -t "mysqldump.sh"
